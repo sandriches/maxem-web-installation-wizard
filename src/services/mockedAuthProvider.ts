@@ -1,13 +1,10 @@
 const mockedAuthProvider = {
-    // isAuthenticated: false,
     auth(callback: ErrorCallback) {
-      // mockedAuthProvider.isAuthenticated = true;
-      setTimeout(callback, 100); // fake async
+      // Save to db/work some backend magic
+      setTimeout(callback, 100);
     },
     signout(callback: ErrorCallback) {
-      // mockedAuthProvider.isAuthenticated = false;
       setTimeout(callback, 100);
     },
   };
-  
-  export { mockedAuthProvider };
+export { mockedAuthProvider };

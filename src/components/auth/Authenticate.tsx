@@ -1,19 +1,49 @@
-import React, { useState } from 'react';
-import { IAuthController } from '../../types/IAuthController';
-import { Formik, Field, Form, ErrorMessage } from "formik";
+import React from 'react';
+import { Formik, Field, Form, ErrorMessage, FormikValues } from "formik";
 import * as Yup from "yup";
-export default function Authenticate() {
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../context/AuthContext';
+import { serial_regex } from '../../globals';
 
-  const [message, setMessage] = useState<string>("");
-  const [successful, setSuccessful] = useState<boolean>(false);
-  const [serial, setSerial] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+function Authenticate() {
+  function useAuth() {
+    return React.useContext(AuthContext);
+  }
+  
+  const [message, setMessage] = React.useState<string>("");
+  const [successful, setSuccessful] = React.useState<boolean>(false);
 
-  const initialValues: IAuthController = {
+  let navigate = useNavigate();
+  let location: any = useLocation();
+  let auth = useAuth();
+
+  if (auth.user) {
+    return <Navigate to="/" state={{ from: location }} replace />;
+  }
+
+
+  let from = location.state?.from?.pathname || "/";
+
+  function handleSubmit(values: FormikValues): void {
+    let {serial, password} = values;
+
+    auth.signin(serial, password, (error: any) => {
+      if (error) {
+        const resMessage = error.message || error.toString();
+        setMessage(resMessage);
+        setSuccessful(false);
+      } else {
+      setSuccessful(true);
+      // If more routes/pages are added, this redirects user to page before login was reached.
+      navigate(from, { replace: true })
+      }
+    });
+  }
+
+  const initialValues: any = {
     serial: "",
     password: "",
   };
-  const serial_regex = /[a-zA-Z][a-zA-Z]\d-\d-[a-zA-Z]-\d\d\d\d\d\d/;
 
   const validationSchema = Yup.object().shape({
     serial: Yup.string()
@@ -38,17 +68,12 @@ export default function Authenticate() {
       .required("Required field"),
   });
 
-  const handleAuthenticate = (formValue: IAuthController) => {
-    const { serial, password } = formValue;
-    // mockedAuthProvider.auth();
-  };
-
   return(
     <><div>
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
-        onSubmit={handleAuthenticate}
+        onSubmit={handleSubmit}
       >
         <Form>
           {!successful && (
@@ -92,3 +117,4 @@ export default function Authenticate() {
     </div></>
   )
 }
+export default Authenticate
